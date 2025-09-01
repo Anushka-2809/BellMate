@@ -1,8 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:myapp/welcome_screen.dart';
 import 'package:provider/provider.dart';
-import 'package:myapp/theme_provider.dart';
-import 'package:myapp/signup_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
@@ -19,12 +19,28 @@ void main() async {
   );
 }
 
+class ThemeProvider with ChangeNotifier {
+  ThemeMode _themeMode = ThemeMode.system;
+
+  ThemeMode get themeMode => _themeMode;
+
+  void toggleTheme() {
+    _themeMode = _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+    notifyListeners();
+  }
+
+  void setSystemTheme() {
+    _themeMode = ThemeMode.system;
+    notifyListeners();
+  }
+}
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    const Color primarySeedColor = Colors.deepPurple;
+    const MaterialColor primarySeedColor = Colors.deepPurple;
 
     final TextTheme appTextTheme = TextTheme(
       displayLarge: GoogleFonts.oswald(fontSize: 57, fontWeight: FontWeight.bold),
@@ -85,7 +101,7 @@ class MyApp extends StatelessWidget {
           theme: lightTheme,
           darkTheme: darkTheme,
           themeMode: themeProvider.themeMode,
-          home: const SignUpScreen(),
+          home: const WelcomeScreen(),
         );
       },
     );

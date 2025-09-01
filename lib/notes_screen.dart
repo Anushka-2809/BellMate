@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/timetable_screen.dart';
-import 'package:myapp/notes_screen.dart';
+import 'package:myapp/add_note_screen.dart';
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+class NotesScreen extends StatelessWidget {
+  const NotesScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home'),
+        title: const Text('Notes'),
       ),
       body: Center(
         child: Column(
@@ -19,20 +18,17 @@ class HomeScreen extends StatelessWidget {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const TimetableScreen()),
+                  MaterialPageRoute(builder: (context) => const AddNoteScreen()),
                 );
               },
-              child: const Text('Timetable'),
+              child: const Text('ADD NOTES'),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const NotesScreen()),
-                );
+                // TODO: Navigate to Notes List Screen
               },
-              child: const Text('Notes'),
+              child: const Text('NOTES LIST'),
             ),
           ],
         ),

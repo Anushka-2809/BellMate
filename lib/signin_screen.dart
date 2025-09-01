@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/signup_screen.dart';
+import 'package:myapp/dashboard_screen.dart'; // Import the dashboard screen
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -59,7 +60,10 @@ class _SignInScreenState extends State<SignInScreen> {
             const SizedBox(height: 40),
             ElevatedButton(
               onPressed: () {
-                // TODO: Implement sign in logic
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const DashboardScreen()),
+                );
               },
               child: const Text('SIGN IN'),
             ),
@@ -111,7 +115,7 @@ class _SignInScreenState extends State<SignInScreen> {
         ),
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.2),
+        fillColor: theme.colorScheme.surfaceContainerHighest,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
