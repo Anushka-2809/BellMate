@@ -97,6 +97,7 @@ class MyApp extends StatelessWidget {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
+          debugShowCheckedModeBanner: false,
           title: 'Flutter Material AI App',
           theme: lightTheme,
           darkTheme: darkTheme,
