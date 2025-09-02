@@ -8,6 +8,8 @@ import 'package:myapp/home_screen.dart';
 import 'package:myapp/splash_screen.dart';
 import 'package:myapp/welcome_screen.dart';
 import 'auth_service.dart';
+import 'bell_service.dart';
+import 'notification_service.dart';
 import 'notes_provider.dart';
 import 'timetable_provider.dart';
 
@@ -19,8 +21,16 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => AuthService(prefs)),
-        ChangeNotifierProvider(create: (context) => NotesProvider()),
         ChangeNotifierProvider(create: (context) => TimetableProvider()),
+        ChangeNotifierProvider(create: (context) => NotesProvider()),
+        Provider(
+          create: (context) => BellService(),
+        ),
+        ProxyProvider2<TimetableProvider, BellService, NotificationService>(
+          update: (context, timetableProvider, bellService, previous) =>
+              NotificationService(timetableProvider, bellService),
+          dispose: (context, service) => service.dispose(),
+        ),
       ],
       child: const MyApp(),
     ),

@@ -1,47 +1,50 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:myapp/period_model.dart';
 
 class TimetableProvider with ChangeNotifier {
-  Map<String, List<Map<String, String>>> _timetable = {
-    'Monday': [],
-    'Tuesday': [],
-    'Wednesday': [],
-    'Thursday': [],
-    'Friday': [],
-    'Saturday': [],
-    'Sunday': [],
-  };
+  List<Period> _periods = [];
 
-  Map<String, List<Map<String, String>>> get timetable => {..._timetable};
+  TimetableProvider() {
+    loadTimetable();
+  }
+
+  List<Period> get periods => _periods;
+
+  List<Period> getEventsForDay(DateTime day) {
+    return _periods
+        .where((period) =>
+            period.date.year == day.year &&
+            period.date.month == day.month &&
+            period.date.day == day.day)
+        .toList();
+  }
 
   Future<void> loadTimetable() async {
     final prefs = await SharedPreferences.getInstance();
-    final timetableData = prefs.getString('timetable');
+    final timetableData = prefs.getString('timetable_data');
     if (timetableData != null) {
-      final decodedData = json.decode(timetableData) as Map<String, dynamic>;;
-      _timetable = decodedData.map((key, value) {
-        // Convert each entry in the list to the correct type
-        final list = (value as List).map((item) => Map<String, String>.from(item)).toList();
-        return MapEntry(key, list);
-      });
+      final decodedData = json.decode(timetableData) as List;
+      _periods = decodedData.map((item) => Period.fromJson(item)).toList();
       notifyListeners();
     }
   }
 
   Future<void> _saveTimetable() async {
     final prefs = await SharedPreferences.getInstance();
-    prefs.setString('timetable', json.encode(_timetable));
+    final encodedData = json.encode(_periods.map((p) => p.toJson()).toList());
+    prefs.setString('timetable_data', encodedData);
   }
 
-  void addEntry(String day, String subject, String time) {
-    _timetable[day]?.add({'subject': subject, 'time': time});
+  void addPeriod(Period period) {
+    _periods.add(period);
     _saveTimetable();
     notifyListeners();
   }
 
-  void deleteEntry(String day, int index) {
-    _timetable[day]?.removeAt(index);
+  void deletePeriod(Period period) {
+    _periods.remove(period);
     _saveTimetable();
     notifyListeners();
   }

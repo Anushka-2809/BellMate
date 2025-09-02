@@ -89,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: GradientIcon(
-              icon: Icons.notifications,
+              icon: Icons.schedule, // Changed from Icons.notifications
               size: 24,
               gradient: buttonGradient,
             ),
@@ -97,7 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           BottomNavigationBarItem(
             icon: GradientIcon(
-              icon: Icons.note,
+              icon: Icons.notes, // Changed from Icons.note
               size: 24,
               gradient: buttonGradient,
             ),
@@ -105,7 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           BottomNavigationBarItem(
             icon: GradientIcon(
-              icon: Icons.person,
+              icon: Icons.person, // Remains the same
               size: 24,
               gradient: buttonGradient,
             ),
