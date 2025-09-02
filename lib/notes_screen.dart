@@ -10,7 +10,6 @@ class NotesScreen extends StatefulWidget {
 }
 
 class _NotesScreenState extends State<NotesScreen> {
-  final _titleController = TextEditingController();
   final _noteController = TextEditingController();
 
   @override
@@ -25,10 +24,6 @@ class _NotesScreenState extends State<NotesScreen> {
     final notesProvider = Provider.of<NotesProvider>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notes'),
-        centerTitle: true,
-      ),
       body: Column(
         children: [
           Expanded(
@@ -67,66 +62,70 @@ class _NotesScreenState extends State<NotesScreen> {
           ),
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: Column(
-                    children: [
-                      TextField(
-                        controller: _titleController,
-                        decoration: InputDecoration(
-                          hintText: 'Note title',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                          prefixIcon: const Icon(Icons.title),
-                          filled: true,
-                          fillColor: Theme.of(context).cardColor.withOpacity(0.9),
-                        ),
-                        textInputAction: TextInputAction.next,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        children: [
+                          TextField(
+                            decoration: InputDecoration(
+                              hintText: 'Title (optional)',
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              prefixIcon: const Icon(Icons.title),
+                              filled: true,
+                              fillColor: Theme.of(context).cardColor.withOpacity(0.9),
+                            ),
+                            onChanged: (value) {},
+                            onSubmitted: (_) {},
+                          ),
+                          const SizedBox(height: 10),
+                          TextField(
+                            controller: _noteController,
+                            decoration: InputDecoration(
+                              hintText: 'Write your note...',
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              prefixIcon: const Icon(Icons.note_add_outlined),
+                              filled: true,
+                              fillColor: Theme.of(context).cardColor.withOpacity(0.9),
+                            ),
+                            textInputAction: TextInputAction.done,
+                            onSubmitted: (value) {
+                              final body = _noteController.text.trim();
+                              if (body.isNotEmpty) {
+                                notesProvider.addNote(title: 'Note', body: body);
+                                _noteController.clear();
+                              }
+                            },
+                            minLines: 1,
+                            maxLines: 3,
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 10),
-                      TextField(
-                        controller: _noteController,
-                        decoration: InputDecoration(
-                          hintText: 'Enter your note',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                          prefixIcon: const Icon(Icons.note_add_outlined),
-                          filled: true,
-                          fillColor: Theme.of(context).cardColor.withOpacity(0.9),
-                        ),
-                        textInputAction: TextInputAction.done,
-                        onSubmitted: (value) {
-                          final title = _titleController.text.trim();
-                          final body = _noteController.text.trim();
-                          if (title.isNotEmpty || body.isNotEmpty) {
-                            notesProvider.addNote(title: title.isEmpty ? 'Untitled' : title, body: body);
-                            _titleController.clear();
-                            _noteController.clear();
-                          }
-                        },
-                        minLines: 1,
-                        maxLines: 3,
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 18),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.send),
+                    label: const Text('Send'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () {
+                      final body = _noteController.text.trim();
+                      if (body.isNotEmpty) {
+                        notesProvider.addNote(title: 'Note', body: body);
+                        _noteController.clear();
+                      }
+                    },
                   ),
-                  onPressed: () {
-                    final title = _titleController.text.trim();
-                    final body = _noteController.text.trim();
-                    if (title.isNotEmpty || body.isNotEmpty) {
-                      notesProvider.addNote(title: title.isEmpty ? 'Untitled' : title, body: body);
-                      _titleController.clear();
-                      _noteController.clear();
-                    }
-                  },
                 ),
               ],
             ),
