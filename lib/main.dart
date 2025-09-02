@@ -2,40 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-
-import 'auth_screen.dart';
-import 'home_screen.dart';
-import 'theme_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:myapp/auth_screen.dart';
+import 'package:myapp/home_screen.dart';
+import 'package:myapp/splash_screen.dart';
+import 'package:myapp/welcome_screen.dart';
+import 'auth_service.dart';
+import 'notes_provider.dart';
 import 'timetable_provider.dart';
-import 'welcome_screen.dart';
-
-final _router = GoRouter(
-  routes: [
-    GoRoute(
-      path: '/',
-      builder: (context, state) => const WelcomeScreen(),
-    ),
-    GoRoute(
-      path: '/auth',
-      builder: (context, state) => const AuthScreen(),
-    ),
-    GoRoute(
-      path: '/home',
-      builder: (context, state) => const HomeScreen(),
-    ),
-  ],
-);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
 
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => ThemeProvider()),
-        ChangeNotifierProvider(
-          create: (context) => TimetableProvider()..loadPeriods(),
-        ),
+        ChangeNotifierProvider(create: (context) => AuthService(prefs)),
+        ChangeNotifierProvider(create: (context) => NotesProvider()),
+        ChangeNotifierProvider(create: (context) => TimetableProvider()),
       ],
       child: const MyApp(),
     ),
@@ -47,82 +32,57 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const Color primarySeedColor = Colors.teal;
+    const primarySeedColor = Colors.blue;
 
-    final TextTheme appTextTheme = TextTheme(
-      displayLarge:
-          GoogleFonts.oswald(fontSize: 57, fontWeight: FontWeight.bold),
-      titleLarge: GoogleFonts.roboto(fontSize: 22, fontWeight: FontWeight.w500),
-      bodyMedium: GoogleFonts.openSans(fontSize: 14),
-    );
-
-    final ColorScheme lightColorScheme = ColorScheme.fromSeed(
-      seedColor: primarySeedColor,
-      brightness: Brightness.light,
-    );
-
-    final ColorScheme darkColorScheme = ColorScheme.fromSeed(
-      seedColor: primarySeedColor,
+    final darkTheme = ThemeData(
+      useMaterial3: true,
       brightness: Brightness.dark,
-    );
-
-    final ThemeData lightTheme = ThemeData(
-      useMaterial3: true,
-      colorScheme: lightColorScheme,
-      textTheme: appTextTheme,
+      scaffoldBackgroundColor: Colors.black,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: primarySeedColor,
+        brightness: Brightness.dark,
+      ),
+      textTheme: GoogleFonts.latoTextTheme(ThemeData.dark().textTheme),
       appBarTheme: AppBarTheme(
-        backgroundColor: lightColorScheme.primary,
-        foregroundColor: lightColorScheme.onPrimary,
-        titleTextStyle:
-            GoogleFonts.oswald(fontSize: 24, fontWeight: FontWeight.bold),
+        backgroundColor: Colors.grey[900],
+        foregroundColor: Colors.white,
+        titleTextStyle: GoogleFonts.oswald(fontSize: 24, fontWeight: FontWeight.bold),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          foregroundColor: lightColorScheme.onPrimary,
-          backgroundColor: lightColorScheme.primary,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          textStyle:
-              GoogleFonts.roboto(fontSize: 16, fontWeight: FontWeight.w500),
+          textStyle: GoogleFonts.roboto(fontSize: 16, fontWeight: FontWeight.w500),
         ),
       ),
     );
 
-    final ThemeData darkTheme = ThemeData(
-      useMaterial3: true,
-      colorScheme: darkColorScheme,
-      textTheme: appTextTheme,
-      appBarTheme: AppBarTheme(
-        backgroundColor: darkColorScheme.primaryContainer,
-        foregroundColor: darkColorScheme.onPrimaryContainer,
-        titleTextStyle:
-            GoogleFonts.oswald(fontSize: 24, fontWeight: FontWeight.bold),
+    return MaterialApp.router(
+      title: 'BellMate',
+      theme: darkTheme,
+      themeMode: ThemeMode.dark,
+      debugShowCheckedModeBanner: false,
+      routerConfig: GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (context, state) => const SplashScreen(),
+          ),
+          GoRoute(
+            path: '/welcome',
+            builder: (context, state) => const WelcomeScreen(),
+          ),
+          GoRoute(
+            path: '/auth',
+            builder: (context, state) => const AuthScreen(),
+          ),
+          GoRoute(
+            path: '/home',
+            builder: (context, state) => const HomeScreen(),
+          ),
+        ],
       ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          foregroundColor: darkColorScheme.onPrimary,
-          backgroundColor: darkColorScheme.primary,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          textStyle:
-              GoogleFonts.roboto(fontSize: 16, fontWeight: FontWeight.w500),
-        ),
-      ),
-    );
-
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, child) {
-        return MaterialApp.router(
-          routerConfig: _router,
-          title: 'Periodic Bell',
-          theme: lightTheme,
-          darkTheme: darkTheme,
-          themeMode: themeProvider.themeMode,
-          debugShowCheckedModeBanner: false,
-        );
-      },
     );
   }
 }

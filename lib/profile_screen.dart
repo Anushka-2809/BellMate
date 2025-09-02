@@ -12,12 +12,6 @@ class ProfileScreen extends StatelessWidget {
       body: const Center(
         child: Text('Profile Screen'),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Add your onPressed code here!
-        },
-        child: const Icon(Icons.add),
-      ),
     );
   }
 }

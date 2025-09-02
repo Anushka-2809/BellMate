@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:myapp/gradient_button.dart';
 import 'package:myapp/timetable.dart';
 
 class AddTimetableScreen extends StatefulWidget {
@@ -10,9 +11,9 @@ class AddTimetableScreen extends StatefulWidget {
 
 class _AddTimetableScreenState extends State<AddTimetableScreen> {
   final _subjectController = TextEditingController();
-  final _timeController = TextEditingController();
   final _classNameController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
+  TimeOfDay _selectedTime = TimeOfDay.now();
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -24,6 +25,18 @@ class _AddTimetableScreenState extends State<AddTimetableScreen> {
     if (picked != null && picked != _selectedDate) {
       setState(() {
         _selectedDate = picked;
+      });
+    }
+  }
+
+  Future<void> _selectTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _selectedTime,
+    );
+    if (picked != null && picked != _selectedTime) {
+      setState(() {
+        _selectedTime = picked;
       });
     }
   }
@@ -46,13 +59,6 @@ class _AddTimetableScreenState extends State<AddTimetableScreen> {
             ),
             const SizedBox(height: 16),
             TextField(
-              controller: _timeController,
-              decoration: const InputDecoration(
-                labelText: 'Time',
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
               controller: _classNameController,
               decoration: const InputDecoration(
                 labelText: 'Class Name',
@@ -70,17 +76,28 @@ class _AddTimetableScreenState extends State<AddTimetableScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
+            Row(
+              children: [
+                Text('Time: ${_selectedTime.format(context)}'),
+                const SizedBox(width: 16),
+                ElevatedButton(
+                  onPressed: () => _selectTime(context),
+                  child: const Text('Select Time'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            GradientButton(
               onPressed: () {
                 final newTimetable = Timetable(
                   subject: _subjectController.text,
-                  time: _timeController.text,
+                  time: _selectedTime.format(context),
                   className: _classNameController.text,
                   date: _selectedDate,
                 );
                 Navigator.pop(context, newTimetable);
               },
-              child: const Text('Add Timetable'),
+              text: 'Add Timetable',
             ),
           ],
         ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/gradient_button.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -7,18 +8,24 @@ class WelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Welcome to BellMate'),
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              'Welcome to Periodic Bell',
-              style: Theme.of(context).textTheme.headlineLarge,
+            const Text(
+              'Your personal timetable and notes companion!',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 24),
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () => context.go('/auth'),
-              child: const Text('Get Started'),
+            const SizedBox(height: 40),
+            GradientButton(
+              text: 'Get Started',
+              onPressed: () {
+                context.go('/auth');
+              },
             ),
           ],
         ),

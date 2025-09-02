@@ -2,52 +2,47 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'period_model.dart';
-
 class TimetableProvider with ChangeNotifier {
-  List<Period> _periods = [];
+  Map<String, List<Map<String, String>>> _timetable = {
+    'Monday': [],
+    'Tuesday': [],
+    'Wednesday': [],
+    'Thursday': [],
+    'Friday': [],
+    'Saturday': [],
+    'Sunday': [],
+  };
 
-  List<Period> get periods => _periods;
+  Map<String, List<Map<String, String>>> get timetable => {..._timetable};
 
-  static const String _timetableKey = 'timetable';
-
-  Future<void> loadPeriods() async {
+  Future<void> loadTimetable() async {
     final prefs = await SharedPreferences.getInstance();
-    final String? timetableString = prefs.getString(_timetableKey);
-
-    if (timetableString != null) {
-      final List<dynamic> timetableJson = jsonDecode(timetableString);
-      _periods = timetableJson.map((json) => Period.fromJson(json)).toList();
+    final timetableData = prefs.getString('timetable');
+    if (timetableData != null) {
+      final decodedData = json.decode(timetableData) as Map<String, dynamic>;;
+      _timetable = decodedData.map((key, value) {
+        // Convert each entry in the list to the correct type
+        final list = (value as List).map((item) => Map<String, String>.from(item)).toList();
+        return MapEntry(key, list);
+      });
       notifyListeners();
     }
   }
 
-  Future<void> _savePeriods() async {
+  Future<void> _saveTimetable() async {
     final prefs = await SharedPreferences.getInstance();
-    final String timetableString =
-        jsonEncode(_periods.map((period) => period.toJson()).toList());
-    await prefs.setString(_timetableKey, timetableString);
+    prefs.setString('timetable', json.encode(_timetable));
   }
 
-  Future<void> addPeriod(Period period) async {
-    _periods.add(period);
-    await _savePeriods();
+  void addEntry(String day, String subject, String time) {
+    _timetable[day]?.add({'subject': subject, 'time': time});
+    _saveTimetable();
     notifyListeners();
   }
 
-  Future<void> editPeriod(int index, Period period) async {
-    if (index >= 0 && index < _periods.length) {
-      _periods[index] = period;
-      await _savePeriods();
-      notifyListeners();
-    }
-  }
-
-  Future<void> deletePeriod(int index) async {
-    if (index >= 0 && index < _periods.length) {
-      _periods.removeAt(index);
-      await _savePeriods();
-      notifyListeners();
-    }
+  void deleteEntry(String day, int index) {
+    _timetable[day]?.removeAt(index);
+    _saveTimetable();
+    notifyListeners();
   }
 }
