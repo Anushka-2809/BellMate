@@ -1,33 +1,9 @@
-import 'package:flutter/foundation.dart';
+
+import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:myapp/welcome_screen.dart';
-import 'package:provider/provider.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  runApp(
-    ChangeNotifierProvider(
-      create: (context) => ThemeProvider(),
-      child: const MyApp(),
-    ),
-  );
-}
-
-class ThemeProvider with ChangeNotifier {
-  ThemeMode _themeMode = ThemeMode.system;
-
-  ThemeMode get themeMode => _themeMode;
-
-  void toggleTheme() {
-    _themeMode = _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
-    notifyListeners();
-  }
-
-  void setSystemTheme() {
-    _themeMode = ThemeMode.system;
-    notifyListeners();
-  }
+void main() {
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -35,71 +11,97 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const MaterialColor primarySeedColor = Colors.deepPurple;
-
-    final TextTheme appTextTheme = TextTheme(
-      displayLarge: GoogleFonts.oswald(fontSize: 57, fontWeight: FontWeight.bold),
-      titleLarge: GoogleFonts.roboto(fontSize: 22, fontWeight: FontWeight.w500),
-      bodyMedium: GoogleFonts.openSans(fontSize: 14),
+    return MaterialApp(
+      title: 'Rock, Paper, Scissors',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: const MyHomePage(title: 'Rock, Paper, Scissors'),
     );
+  }
+}
 
-    final ThemeData lightTheme = ThemeData(
-      useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: primarySeedColor,
-        brightness: Brightness.light,
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key, required this.title});
+
+  final String title;
+
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  String _playerChoice = '';
+  String _computerChoice = '';
+  String _result = '';
+
+  void _play(String playerChoice) {
+    setState(() {
+      _playerChoice = playerChoice;
+      _computerChoice = _getComputerChoice();
+      _result = _getResult(_playerChoice, _computerChoice);
+    });
+  }
+
+  String _getComputerChoice() {
+    const choices = ['Rock', 'Paper', 'Scissors'];
+    return choices[Random().nextInt(choices.length)];
+  }
+
+  String _getResult(String playerChoice, String computerChoice) {
+    if (playerChoice == computerChoice) {
+      return 'It\'s a tie!';
+    } else if ((playerChoice == 'Rock' && computerChoice == 'Scissors') ||
+        (playerChoice == 'Scissors' && computerChoice == 'Paper') ||
+        (playerChoice == 'Paper' && computerChoice == 'Rock')) {
+      return 'You win!';
+    } else {
+      return 'You lose!';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
       ),
-      textTheme: appTextTheme,
-      appBarTheme: AppBarTheme(
-        backgroundColor: primarySeedColor,
-        foregroundColor: Colors.white,
-        titleTextStyle: GoogleFonts.oswald(fontSize: 24, fontWeight: FontWeight.bold),
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          foregroundColor: Colors.white,
-          backgroundColor: primarySeedColor,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          textStyle: GoogleFonts.roboto(fontSize: 16, fontWeight: FontWeight.w500),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            const Text(
+              'Choose your weapon:',
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: () => _play('Rock'),
+                  child: const Text('Rock'),
+                ),
+                ElevatedButton(
+                  onPressed: () => _play('Paper'),
+                  child: const Text('Paper'),
+                ),
+                ElevatedButton(
+                  onPressed: () => _play('Scissors'),
+                  child: const Text('Scissors'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Text('You chose: $_playerChoice'),
+            Text('Computer chose: $_computerChoice'),
+            const SizedBox(height: 20),
+            Text(
+              _result,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+          ],
         ),
       ),
-    );
-
-    final ThemeData darkTheme = ThemeData(
-      useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: primarySeedColor,
-        brightness: Brightness.dark,
-      ),
-      textTheme: appTextTheme,
-      appBarTheme: AppBarTheme(
-        backgroundColor: Colors.grey[900],
-        foregroundColor: Colors.white,
-        titleTextStyle: GoogleFonts.oswald(fontSize: 24, fontWeight: FontWeight.bold),
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          foregroundColor: Colors.black,
-          backgroundColor: primarySeedColor.shade200,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          textStyle: GoogleFonts.roboto(fontSize: 16, fontWeight: FontWeight.w500),
-        ),
-      ),
-    );
-
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, child) {
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'Flutter Material AI App',
-          theme: lightTheme,
-          darkTheme: darkTheme,
-          themeMode: themeProvider.themeMode,
-          home: const WelcomeScreen(),
-        );
-      },
     );
   }
 }

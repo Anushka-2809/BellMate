@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:myapp/dashboard_screen.dart';
 import 'package:myapp/signin_screen.dart';
-import 'package:myapp/dashboard_screen.dart'; // Import the dashboard screen
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -10,7 +11,23 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
+
+  Future<void> _signUp() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('name', _nameController.text);
+    await prefs.setString('email', _emailController.text);
+
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const DashboardScreen()),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,12 +52,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
           children: [
             _buildTextField(
               context,
+              controller: _nameController,
               icon: Icons.person_outline,
               label: 'Name',
             ),
             const SizedBox(height: 20),
             _buildTextField(
               context,
+              controller: _emailController,
               icon: Icons.email_outlined,
               label: 'Email Id',
               keyboardType: TextInputType.emailAddress,
@@ -48,6 +67,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             const SizedBox(height: 20),
             _buildTextField(
               context,
+              controller: _passwordController,
               icon: Icons.lock_outline,
               label: 'Password',
               obscureText: !_isPasswordVisible,
@@ -65,12 +85,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ),
             const SizedBox(height: 40),
             ElevatedButton(
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const DashboardScreen()),
-                );
-              },
+              onPressed: _signUp,
               child: const Text('SIGN UP'),
             ),
             const SizedBox(height: 20),
@@ -102,6 +117,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   Widget _buildTextField(
     BuildContext context, {
+    required TextEditingController controller,
     required IconData icon,
     required String label,
     bool obscureText = false,
@@ -110,6 +126,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }) {
     final theme = Theme.of(context);
     return TextField(
+      controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
       style: theme.textTheme.bodyMedium,
