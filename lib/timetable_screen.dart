@@ -11,6 +11,8 @@ class TimetableScreen extends StatefulWidget {
 
 class _TimetableScreenState extends State<TimetableScreen> {
   DateTime? _selectedDate;
+  DateTime? _startOfWeek;
+  DateTime? _endOfWeek;
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +48,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         ElevatedButton(onPressed: () => _selectDate(context), child: const Text("Filter by Date")),
-        ElevatedButton(onPressed: () {}, child: const Text("Filter by Week")),
+        ElevatedButton(onPressed: () => _selectWeek(context), child: const Text("Filter by Week")),
       ],
     );
   }
@@ -61,6 +63,25 @@ class _TimetableScreenState extends State<TimetableScreen> {
     if (picked != null && picked != _selectedDate) {
       setState(() {
         _selectedDate = picked;
+        _startOfWeek = null;
+        _endOfWeek = null;
+      });
+    }
+  }
+
+  Future<void> _selectWeek(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _startOfWeek ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedDate = null;
+        // Assuming Monday is the start of the week
+        _startOfWeek = picked.subtract(Duration(days: picked.weekday - 1));
+        _endOfWeek = _startOfWeek!.add(const Duration(days: 6));
       });
     }
   }
@@ -86,15 +107,33 @@ class _TimetableScreenState extends State<TimetableScreen> {
         'className': 'Class 9th A',
         'date': DateTime.now(),
       },
+       {
+        'subject': 'Science',
+        'time': '14:00 - 15:00',
+        'className': 'Class 10th B',
+        'date': DateTime.now().add(const Duration(days: 3)),
+      },
+      {
+        'subject': 'History',
+        'time': '11:00 - 12:00',
+        'className': 'Class 7th A',
+        'date': DateTime.now().subtract(const Duration(days: 2)),
+      },
     ];
 
     final filteredList = timetableData.where((entry) {
-      if (_selectedDate == null) {
-        return true;
+      if (_selectedDate != null) {
+        return entry['date'].year == _selectedDate!.year &&
+            entry['date'].month == _selectedDate!.month &&
+            entry['date'].day == _selectedDate!.day;
+      } else if (_startOfWeek != null && _endOfWeek != null) {
+        final entryDate = entry['date'];
+        // The end of the day is right before midnight of the next day.
+        final endOfWeekInclusive = _endOfWeek!.add(const Duration(days: 1));
+        return (entryDate.isAtSameMomentAs(_startOfWeek!) || entryDate.isAfter(_startOfWeek!)) &&
+               entryDate.isBefore(endOfWeekInclusive);
       }
-      return entry['date'].year == _selectedDate!.year &&
-          entry['date'].month == _selectedDate!.month &&
-          entry['date'].day == _selectedDate!.day;
+      return true; // Show all if no filter is selected
     }).toList();
 
     return ListView.builder(
@@ -127,7 +166,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
             ),
             const SizedBox(height: 5),
             Text(className, style: TextStyle(color: subTextColor, fontSize: 14)),
-            const SizedBox(height: 5),
+             const SizedBox(height: 5),
             Text(DateFormat.yMMMd().format(date), style: TextStyle(color: subTextColor, fontSize: 14)),
           ],
         ),
