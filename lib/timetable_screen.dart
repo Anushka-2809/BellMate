@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:myapp/gradient_button.dart';
 import 'package:myapp/timetable_provider.dart';
 
 class TimetableScreen extends StatefulWidget {
@@ -11,13 +12,25 @@ class TimetableScreen extends StatefulWidget {
 
 class _TimetableScreenState extends State<TimetableScreen> {
   final _subjectController = TextEditingController();
-  final _timeController = TextEditingController();
   String _selectedDay = 'Monday';
+  TimeOfDay _selectedTime = TimeOfDay.now();
 
   @override
   void initState() {
     super.initState();
     Provider.of<TimetableProvider>(context, listen: false).loadTimetable();
+  }
+
+  Future<void> _selectTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _selectedTime,
+    );
+    if (picked != null && picked != _selectedTime) {
+      setState(() {
+        _selectedTime = picked;
+      });
+    }
   }
 
   @override
@@ -80,26 +93,31 @@ class _TimetableScreenState extends State<TimetableScreen> {
                     hintText: 'Enter subject',
                   ),
                 ),
-                TextField(
-                  controller: _timeController,
-                  decoration: const InputDecoration(
-                    hintText: 'Enter time',
-                  ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Time: ${_selectedTime.format(context)}'),
+                    const SizedBox(width: 10),
+                    ElevatedButton(
+                      onPressed: () => _selectTime(context),
+                      child: const Text('Select Time'),
+                    ),
+                  ],
                 ),
-                ElevatedButton(
+                const SizedBox(height: 20),
+                GradientButton(
                   onPressed: () {
-                    if (_subjectController.text.isNotEmpty &&
-                        _timeController.text.isNotEmpty) {
+                    if (_subjectController.text.isNotEmpty) {
                       timetableProvider.addEntry(
                         _selectedDay,
                         _subjectController.text,
-                        _timeController.text,
+                        _selectedTime.format(context),
                       );
                       _subjectController.clear();
-                      _timeController.clear();
                     }
                   },
-                  child: const Text('Add Entry'),
+                  text: 'Add Entry',
                 ),
               ],
             ),

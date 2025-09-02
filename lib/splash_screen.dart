@@ -20,17 +20,15 @@ class _SplashScreenState extends State<SplashScreen>
 
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
-    );
+      duration: const Duration(seconds: 1),
+    )..repeat(reverse: true);
 
-    _animation = Tween<double>(begin: 0.0, end: 1.0).animate(
+    _animation = Tween<double>(begin: 0.8, end: 1.2).animate(
       CurvedAnimation(
         parent: _animationController,
         curve: Curves.easeInOut,
       ),
     );
-
-    _animationController.forward();
 
     Timer(const Duration(seconds: 5), () {
       context.go('/welcome');
@@ -48,10 +46,14 @@ class _SplashScreenState extends State<SplashScreen>
     return Scaffold(
       backgroundColor: Colors.black,
       body: Center(
-        child: FadeTransition(
-          opacity: _animation,
-          child: ScaleTransition(
-            scale: _animation,
+        child: ScaleTransition(
+          scale: _animation,
+          child: ShaderMask(
+            shaderCallback: (bounds) => const LinearGradient(
+              colors: [Colors.green, Colors.blue],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ).createShader(bounds),
             child: const Icon(
               Icons.notifications,
               size: 150,
