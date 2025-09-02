@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:table_calendar/table_calendar.dart';
-import 'package:myapp/gradient_button.dart';
 import 'package:myapp/period_model.dart';
+import 'package:myapp/set_alarm_screen.dart';
 import 'package:myapp/timetable_provider.dart';
 
 class TimetableScreen extends StatefulWidget {
@@ -14,52 +13,92 @@ class TimetableScreen extends StatefulWidget {
 }
 
 class _TimetableScreenState extends State<TimetableScreen> {
-  late final ValueNotifier<List<Period>> _selectedEvents;
-  CalendarFormat _calendarFormat = CalendarFormat.month;
-  DateTime _focusedDay = DateTime.now();
-  DateTime? _selectedDay;
+  Future<void> _showAddEntryDialog() async {
+    final subjectController = TextEditingController();
+    TimeOfDay selectedTime = TimeOfDay.now();
+    DateTime selectedDate = DateTime.now();
 
-  final _subjectController = TextEditingController();
-  TimeOfDay _selectedTime = TimeOfDay.now();
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedDay = _focusedDay;
-    _selectedEvents = ValueNotifier(_getEventsForDay(_selectedDay!));
-  }
-
-  @override
-  void dispose() {
-    _selectedEvents.dispose();
-    super.dispose();
-  }
-
-  List<Period> _getEventsForDay(DateTime day) {
-    final timetableProvider = Provider.of<TimetableProvider>(context, listen: false);
-    return timetableProvider.getEventsForDay(day);
-  }
-
-  void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
-    if (!isSameDay(_selectedDay, selectedDay)) {
-      setState(() {
-        _selectedDay = selectedDay;
-        _focusedDay = focusedDay;
-      });
-      _selectedEvents.value = _getEventsForDay(selectedDay);
-    }
-  }
-
-  Future<void> _selectTime(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
+    return showDialog<void>(
       context: context,
-      initialTime: _selectedTime,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Add New Task'),
+              content: SingleChildScrollView(
+                child: ListBody(
+                  children: <Widget>[
+                    TextField(
+                      controller: subjectController,
+                      decoration: const InputDecoration(hintText: 'Enter task'),
+                    ),
+                    const SizedBox(height: 20),
+                    ListTile(
+                      leading: const Icon(Icons.calendar_today),
+                      title: const Text('Date'),
+                      subtitle: Text(DateFormat.yMMMd().format(selectedDate)),
+                      onTap: () async {
+                        final DateTime? picked = await showDatePicker(
+                          context: context,
+                          initialDate: selectedDate,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime(2030),
+                        );
+                        if (picked != null && picked != selectedDate) {
+                          setState(() {
+                            selectedDate = picked;
+                          });
+                        }
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.access_time),
+                      title: const Text('Time'),
+                      subtitle: Text(selectedTime.format(context)),
+                      onTap: () async {
+                        final TimeOfDay? picked = await showTimePicker(
+                          context: context,
+                          initialTime: selectedTime,
+                        );
+                        if (picked != null && picked != selectedTime) {
+                          setState(() {
+                            selectedTime = picked;
+                          });
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('Cancel'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+                ElevatedButton(
+                  child: const Text('Add'),
+                  onPressed: () {
+                    if (subjectController.text.isNotEmpty) {
+                      final newPeriod = Period(
+                        subject: subjectController.text,
+                        time: selectedTime,
+                        date: selectedDate,
+                      );
+                      Provider.of<TimetableProvider>(context, listen: false)
+                          .addPeriod(newPeriod);
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(MaterialPageRoute(builder: (context) => SetAlarmScreen(period: newPeriod)));
+                    }
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
-    if (picked != null && picked != _selectedTime) {
-      setState(() {
-        _selectedTime = picked;
-      });
-    }
   }
 
   @override
@@ -68,156 +107,80 @@ class _TimetableScreenState extends State<TimetableScreen> {
       appBar: AppBar(
         title: const Text('Timetable'),
       ),
-      body: Column(
-        children: [
-          TableCalendar<Period>(
-            firstDay: DateTime.utc(2020, 1, 1),
-            lastDay: DateTime.utc(2030, 12, 31),
-            focusedDay: _focusedDay,
-            selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-            calendarFormat: _calendarFormat,
-            eventLoader: _getEventsForDay,
-            startingDayOfWeek: StartingDayOfWeek.monday,
-            onDaySelected: _onDaySelected,
-            onFormatChanged: (format) {
-              if (_calendarFormat != format) {
-                setState(() {
-                  _calendarFormat = format;
-                });
-              }
-            },
-            onPageChanged: (focusedDay) {
-              _focusedDay = focusedDay;
-            },
-          ),
-          const SizedBox(height: 8.0),
-          Expanded(
-            child: ValueListenableBuilder<List<Period>>(
-              valueListenable: _selectedEvents,
-              builder: (context, value, _) {
-                if (value.isEmpty) {
-                  return const Center(
+      body: Consumer<TimetableProvider>(
+        builder: (context, timetableProvider, child) {
+          final periods = timetableProvider.periods;
+
+          if (periods.isEmpty) {
+            return const Center(
+              child: Text(
+                'No tasks scheduled.',
+                style: TextStyle(fontSize: 18, color: Colors.grey),
+              ),
+            );
+          }
+
+          periods.sort((a, b) {
+            int dateComp = a.date.compareTo(b.date);
+            if (dateComp != 0) return dateComp;
+            final aTime = a.time.hour * 60 + a.time.minute;
+            final bTime = b.time.hour * 60 + b.time.minute;
+            return aTime.compareTo(bTime);
+          });
+
+          final Map<DateTime, List<Period>> groupedPeriods = {};
+          for (final period in periods) {
+            final dateKey = DateTime(period.date.year, period.date.month, period.date.day);
+            if (!groupedPeriods.containsKey(dateKey)) {
+              groupedPeriods[dateKey] = [];
+            }
+            groupedPeriods[dateKey]!.add(period);
+          }
+
+          final sortedDates = groupedPeriods.keys.toList()..sort();
+
+          return ListView.builder(
+            itemCount: sortedDates.length,
+            itemBuilder: (context, index) {
+              final date = sortedDates[index];
+              final periodsForDate = groupedPeriods[date]!;
+              final dateText = DateFormat.yMMMMEEEEd().format(date);
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
                     child: Text(
-                      'No entries for this day.',
-                      style: TextStyle(fontSize: 18, color: Colors.grey),
+                      dateText,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.deepPurple),
                     ),
-                  );
-                }
-
-                value.sort((a, b) {
-                  final aTime = a.time.hour * 60 + a.time.minute;
-                  final bTime = b.time.hour * 60 + b.time.minute;
-                  return aTime.compareTo(bTime);
-                });
-
-                final Map<int, List<Period>> groupedEvents = {};
-                for (final event in value) {
-                  if (!groupedEvents.containsKey(event.time.hour)) {
-                    groupedEvents[event.time.hour] = [];
-                  }
-                  groupedEvents[event.time.hour]!.add(event);
-                }
-
-                final sortedHours = groupedEvents.keys.toList()..sort();
-
-                return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  itemCount: sortedHours.length,
-                  itemBuilder: (context, index) {
-                    final hour = sortedHours[index];
-                    final eventsForHour = groupedEvents[hour]!;
-                    final hourText = DateFormat('h a').format(DateTime(2023, 1, 1, hour));
-
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 60,
-                            padding: const EdgeInsets.only(top: 12.0),
-                            child: Text(
-                              hourText,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey,
-                              ),
-                              textAlign: TextAlign.right,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              children: eventsForHour.map((event) {
-                                return Card(
-                                  margin: const EdgeInsets.symmetric(vertical: 4.0),
-                                  child: ListTile(
-                                    title: Text(event.subject, style: const TextStyle(fontWeight: FontWeight.bold)),
-                                    subtitle: Text(event.time.format(context)),
-                                    trailing: IconButton(
-                                      icon: const Icon(Icons.delete, color: Colors.redAccent),
-                                      onPressed: () {
-                                        Provider.of<TimetableProvider>(context, listen: false)
-                                            .deletePeriod(event);
-                                        _selectedEvents.value = _getEventsForDay(_selectedDay!);
-                                      },
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                        ],
+                  ),
+                  ...periodsForDate.map((period) {
+                    return Card(
+                      margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                      child: ListTile(
+                        title: Text(period.subject, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: Text(period.time.format(context)),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.redAccent),
+                          onPressed: () {
+                            timetableProvider.deletePeriod(period);
+                          },
+                        ),
                       ),
                     );
-                  },
-                );
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: [
-                TextField(
-                  controller: _subjectController,
-                  decoration: const InputDecoration(
-                    hintText: 'Enter subject',
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('Time: ${_selectedTime.format(context)}'),
-                    const SizedBox(width: 10),
-                    ElevatedButton(
-                      onPressed: () => _selectTime(context),
-                      child: const Text('Select Time'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                GradientButton(
-                  onPressed: () {
-                    if (_subjectController.text.isNotEmpty) {
-                      final newPeriod = Period(
-                        subject: _subjectController.text,
-                        time: _selectedTime,
-                        date: _selectedDay!,
-                      );
-                      Provider.of<TimetableProvider>(context, listen: false)
-                          .addPeriod(newPeriod);
-                      _subjectController.clear();
-                      _selectedEvents.value = _getEventsForDay(_selectedDay!);
-                    }
-                  },
-                  text: 'Add Entry',
-                ),
-              ],
-            ),
-          ),
-        ],
+                  }),
+                ],
+              );
+            },
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddEntryDialog,
+        child: const Icon(Icons.add),
+        backgroundColor: Colors.deepPurple,
       ),
     );
   }
