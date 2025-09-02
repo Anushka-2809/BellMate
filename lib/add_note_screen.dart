@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:myapp/note.dart';
 
 class AddNoteScreen extends StatefulWidget {
   const AddNoteScreen({super.key});
@@ -8,42 +9,44 @@ class AddNoteScreen extends StatefulWidget {
 }
 
 class _AddNoteScreenState extends State<AddNoteScreen> {
-  final _formKey = GlobalKey<FormState>();
+  final _titleController = TextEditingController();
+  final _contentController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Note')),
+      appBar: AppBar(
+        title: const Text('Add Note'),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              TextFormField(
-                decoration: const InputDecoration(labelText: 'Title'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a title';
-                  }
-                  return null;
-                },
+        child: Column(
+          children: [
+            TextField(
+              controller: _titleController,
+              decoration: const InputDecoration(
+                labelText: 'Title',
               ),
-              TextFormField(
-                decoration: const InputDecoration(labelText: 'Content'),
-                maxLines: 5,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _contentController,
+              decoration: const InputDecoration(
+                labelText: 'Content',
               ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    // TODO: Implement save logic
-                  }
-                },
-                child: const Text('SUBMIT'),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                final newNote = Note(
+                  title: _titleController.text,
+                  content: _contentController.text,
+                );
+                Navigator.pop(context, newNote);
+              },
+              child: const Text('Add Note'),
+            ),
+          ],
         ),
       ),
     );

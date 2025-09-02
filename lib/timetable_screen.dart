@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/add_timetable_screen.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:myapp/timetable.dart';
 
 class TimetableScreen extends StatefulWidget {
   const TimetableScreen({super.key});
@@ -13,6 +15,29 @@ class _TimetableScreenState extends State<TimetableScreen> {
   DateTime? _selectedDate;
   DateTime? _startOfWeek;
   DateTime? _endOfWeek;
+  List<Timetable> _timetables = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTimetables();
+  }
+
+  Future<void> _loadTimetables() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? timetablesString = prefs.getString('timetables');
+    if (timetablesString != null) {
+      setState(() {
+        _timetables = Timetable.decode(timetablesString);
+      });
+    }
+  }
+
+  Future<void> _saveTimetables() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String timetablesString = Timetable.encode(_timetables);
+    await prefs.setString('timetables', timetablesString);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,11 +48,17 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
     return Scaffold(
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          final newTimetable = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const AddTimetableScreen()),
           );
+          if (newTimetable != null) {
+            setState(() {
+              _timetables.add(newTimetable);
+            });
+            _saveTimetables();
+          }
         },
         child: const Icon(Icons.add),
       ),
@@ -36,7 +67,9 @@ class _TimetableScreenState extends State<TimetableScreen> {
           _buildFilterBar(isDarkMode),
           const SizedBox(height: 20),
           Expanded(
-            child: _buildTimetableList(cardColor, textColor, subTextColor),
+            child: _timetables.isEmpty
+                ? const Center(child: Text('No timetable entries yet.'))
+                : _buildTimetableList(cardColor, textColor, subTextColor),
           ),
         ],
       ),
@@ -79,7 +112,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
     if (picked != null) {
       setState(() {
         _selectedDate = null;
-        // Assuming Monday is the start of the week
         _startOfWeek = picked.subtract(Duration(days: picked.weekday - 1));
         _endOfWeek = _startOfWeek!.add(const Duration(days: 6));
       });
@@ -87,48 +119,13 @@ class _TimetableScreenState extends State<TimetableScreen> {
   }
 
   Widget _buildTimetableList(Color cardColor, Color textColor, Color subTextColor) {
-    // Dummy data for now
-    final List<Map<String, dynamic>> timetableData = [
-      {
-        'subject': 'Maths',
-        'time': '09:00 - 10:00',
-        'className': 'Class 9th A',
-        'date': DateTime.now(),
-      },
-      {
-        'subject': 'Maths',
-        'time': '10:00 - 11:00',
-        'className': 'Class 8th C',
-        'date': DateTime.now().add(const Duration(days: 1)),
-      },
-      {
-        'subject': 'English',
-        'time': '12:00 - 13:00',
-        'className': 'Class 9th A',
-        'date': DateTime.now(),
-      },
-       {
-        'subject': 'Science',
-        'time': '14:00 - 15:00',
-        'className': 'Class 10th B',
-        'date': DateTime.now().add(const Duration(days: 3)),
-      },
-      {
-        'subject': 'History',
-        'time': '11:00 - 12:00',
-        'className': 'Class 7th A',
-        'date': DateTime.now().subtract(const Duration(days: 2)),
-      },
-    ];
-
-    final filteredList = timetableData.where((entry) {
+    final filteredList = _timetables.where((entry) {
       if (_selectedDate != null) {
-        return entry['date'].year == _selectedDate!.year &&
-            entry['date'].month == _selectedDate!.month &&
-            entry['date'].day == _selectedDate!.day;
+        return entry.date.year == _selectedDate!.year &&
+            entry.date.month == _selectedDate!.month &&
+            entry.date.day == _selectedDate!.day;
       } else if (_startOfWeek != null && _endOfWeek != null) {
-        final entryDate = entry['date'];
-        // The end of the day is right before midnight of the next day.
+        final entryDate = entry.date;
         final endOfWeekInclusive = _endOfWeek!.add(const Duration(days: 1));
         return (entryDate.isAtSameMomentAs(_startOfWeek!) || entryDate.isAfter(_startOfWeek!)) &&
                entryDate.isBefore(endOfWeekInclusive);
@@ -140,7 +137,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
       itemCount: filteredList.length,
       itemBuilder: (context, index) {
         final item = filteredList[index];
-        return _buildTimetableCard(item['subject'], item['time'], item['className'], cardColor, textColor, subTextColor, item['date']);
+        return _buildTimetableCard(item.subject, item.time, item.className, cardColor, textColor, subTextColor, item.date);
       },
     );
   }
@@ -166,7 +163,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
             ),
             const SizedBox(height: 5),
             Text(className, style: TextStyle(color: subTextColor, fontSize: 14)),
-             const SizedBox(height: 5),
+            const SizedBox(height: 5),
             Text(DateFormat.yMMMd().format(date), style: TextStyle(color: subTextColor, fontSize: 14)),
           ],
         ),

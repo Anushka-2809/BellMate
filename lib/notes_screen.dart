@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:myapp/add_note_screen.dart';
+import 'package:myapp/note.dart';
 
 class NotesScreen extends StatefulWidget {
   const NotesScreen({super.key});
@@ -9,6 +11,30 @@ class NotesScreen extends StatefulWidget {
 }
 
 class _NotesScreenState extends State<NotesScreen> {
+  List<Note> _notes = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotes();
+  }
+
+  Future<void> _loadNotes() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? notesString = prefs.getString('notes');
+    if (notesString != null) {
+      setState(() {
+        _notes = Note.decode(notesString);
+      });
+    }
+  }
+
+  Future<void> _saveNotes() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String notesString = Note.encode(_notes);
+    await prefs.setString('notes', notesString);
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -18,26 +44,33 @@ class _NotesScreenState extends State<NotesScreen> {
 
     return Scaffold(
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          final newNote = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const AddNoteScreen()),
           );
+          if (newNote != null) {
+            setState(() {
+              _notes.add(newNote);
+            });
+            _saveNotes();
+          }
         },
         child: const Icon(Icons.add),
       ),
-      body: _buildNotesList(cardColor, textColor, subTextColor),
+      body: _notes.isEmpty
+          ? const Center(child: Text('No notes yet.'))
+          : _buildNotesList(cardColor, textColor, subTextColor),
     );
   }
 
   Widget _buildNotesList(Color cardColor, Color textColor, Color subTextColor) {
-    // Dummy data for now
-    return ListView(
-      children: [
-        _buildNoteCard('Meeting Notes', 'Discuss project timeline and deliverables.', cardColor, textColor, subTextColor),
-        _buildNoteCard('Shopping List', 'Milk, Bread, Eggs, Cheese.', cardColor, textColor, subTextColor),
-        _buildNoteCard('Ideas', 'New feature for the app: collaborative notes.', cardColor, textColor, subTextColor),
-      ],
+    return ListView.builder(
+      itemCount: _notes.length,
+      itemBuilder: (context, index) {
+        final note = _notes[index];
+        return _buildNoteCard(note.title, note.content, cardColor, textColor, subTextColor);
+      },
     );
   }
 
