@@ -8,8 +8,12 @@ class GradientButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const LinearGradient buttonGradient = LinearGradient(
-      colors: [Colors.blue, Colors.green],
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
+    final LinearGradient buttonGradient = LinearGradient(
+      colors: [
+        colorScheme.primary,
+        colorScheme.secondary,
+      ],
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
     );

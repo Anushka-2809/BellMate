@@ -16,7 +16,7 @@ class ProfileScreen extends StatelessWidget {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: const SizedBox.shrink(),
         centerTitle: true,
         backgroundColor: theme.appBarTheme.backgroundColor,
         elevation: 0,

@@ -85,14 +85,14 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final deviceSize = MediaQuery.of(context).size;
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.deepPurple, Colors.purpleAccent],
+            colors: [colorScheme.primary, colorScheme.secondary],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -100,9 +100,10 @@ class _AuthScreenState extends State<AuthScreen> {
         child: Center(
           child: SingleChildScrollView(
             child: Card(
-              elevation: 8,
+              elevation: 12,
+              color: Colors.white.withOpacity(0.9), // Fixed opacity
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(24),
               ),
               margin: const EdgeInsets.symmetric(horizontal: 24),
               child: Padding(
@@ -113,26 +114,29 @@ class _AuthScreenState extends State<AuthScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
-                      Icon(
+                      const Icon(
                         Icons.lock_outline,
                         size: 72,
-                        color: Colors.deepPurple.shade400,
+                        color: Colors.black87,
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
                       Text(
-                        _authMode == AuthMode.Login ? "Welcome Back" : "Sign Up",
+                        _authMode == AuthMode.Login
+                            ? "Welcome Back"
+                            : "Create Account",
                         style: const TextStyle(
-                          fontSize: 24,
+                          fontSize: 26,
                           fontWeight: FontWeight.bold,
+                          color: Colors.black87,
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 24),
                       TextFormField(
                         decoration: InputDecoration(
                           labelText: 'E-Mail',
                           prefixIcon: const Icon(Icons.email_outlined),
                           filled: true,
-                          fillColor: Colors.grey[100],
+                          fillColor: Colors.white,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -154,7 +158,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           labelText: 'Password',
                           prefixIcon: const Icon(Icons.lock_outline),
                           filled: true,
-                          fillColor: Colors.grey[100],
+                          fillColor: Colors.white,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -179,7 +183,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             labelText: 'Confirm Password',
                             prefixIcon: const Icon(Icons.lock_outline),
                             filled: true,
-                            fillColor: Colors.grey[100],
+                            fillColor: Colors.white,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -199,10 +203,11 @@ class _AuthScreenState extends State<AuthScreen> {
                       else
                         GradientButton(
                           onPressed: _submit,
-                          text:
-                              _authMode == AuthMode.Login ? 'LOGIN' : 'SIGN UP',
+                          text: _authMode == AuthMode.Login
+                              ? 'LOGIN'
+                              : 'SIGN UP',
                         ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       TextButton(
                         onPressed: _switchAuthMode,
                         child: Text(
@@ -210,8 +215,8 @@ class _AuthScreenState extends State<AuthScreen> {
                               ? "Don't have an account? Sign Up"
                               : "Already have an account? Login",
                           style: const TextStyle(
-                            color: Colors.deepPurple,
-                            fontWeight: FontWeight.w500,
+                            color: Colors.black87,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       )

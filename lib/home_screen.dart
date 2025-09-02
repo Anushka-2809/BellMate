@@ -59,6 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context, listen: false);
+    const titles = ['Daily Tasks', 'Notes', 'Profile'];
     const LinearGradient buttonGradient = LinearGradient(
       colors: [Colors.green, Colors.blue],
       begin: Alignment.topLeft,
@@ -67,13 +68,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('BellMate'),
+        toolbarHeight: 48,
+        title: Text(titles[_selectedIndex]),
         centerTitle: true,
         actions: [
           IconButton(
             icon: const GradientIcon(
               icon: Icons.logout,
-              size: 24,
+              size: 22,
               gradient: buttonGradient,
             ),
             onPressed: () async {
@@ -87,11 +89,14 @@ class _HomeScreenState extends State<HomeScreen> {
         child: _widgetOptions.elementAt(_selectedIndex),
       ),
       bottomNavigationBar: BottomNavigationBar(
+        iconSize: 22,
+        selectedFontSize: 11,
+        unselectedFontSize: 10,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: GradientIcon(
               icon: Icons.schedule, // Changed from Icons.notifications
-              size: 24,
+              size: 22,
               gradient: buttonGradient,
             ),
             label: 'Timetable',
@@ -99,7 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: GradientIcon(
               icon: Icons.notes, // Changed from Icons.note
-              size: 24,
+              size: 22,
               gradient: buttonGradient,
             ),
             label: 'Notes',
@@ -107,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: GradientIcon(
               icon: Icons.person, // Remains the same
-              size: 24,
+              size: 22,
               gradient: buttonGradient,
             ),
             label: 'Profile',

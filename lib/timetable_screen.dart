@@ -44,10 +44,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
     final allPeriods = timetableProvider.periods;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('All Scheduled Alarms'),
-        centerTitle: true,
-      ),
       body: allPeriods.isEmpty
           ? const Center(child: Text('No alarms scheduled.'))
           : ListView.builder(

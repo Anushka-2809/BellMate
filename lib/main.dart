@@ -67,18 +67,21 @@ class MyApp extends StatelessWidget {
     final darkTheme = ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple, brightness: Brightness.dark),
-      scaffoldBackgroundColor: Colors.grey.shade900,
-      cardColor: Colors.grey.shade800,
-      appBarTheme: AppBarTheme(
-        backgroundColor: Colors.grey.shade900,
-        titleTextStyle: GoogleFonts.oswald(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
-        iconTheme: const IconThemeData(color: Colors.white),
+      colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal, brightness: Brightness.dark),
+      scaffoldBackgroundColor: const Color(0xFF0F1416),
+      cardColor: const Color(0xFF152126),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFF0F1416),
+        titleTextStyle: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
-      textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(backgroundColor: Colors.deepPurple),
+      textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme).apply(
+        bodyColor: Colors.white,
+        displayColor: Colors.white,
+      ),
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(backgroundColor: Colors.teal),
       elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple, foregroundColor: Colors.white),
+        style: ElevatedButton.styleFrom(backgroundColor: Colors.teal.shade400, foregroundColor: Colors.white),
       ),
     );
 
