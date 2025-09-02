@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'auth_service.dart';
 import 'gradient_button.dart';
 
-enum AuthMode { SignUp, Login }
+enum AuthMode { signUp, login }
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -15,7 +15,7 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey();
-  AuthMode _authMode = AuthMode.Login;
+  AuthMode _authMode = AuthMode.login;
   final Map<String, String> _authData = {
     'email': '',
     'password': '',
@@ -52,7 +52,7 @@ class _AuthScreenState extends State<AuthScreen> {
     });
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
-      if (_authMode == AuthMode.Login) {
+      if (_authMode == AuthMode.login) {
         await authService.signInWithEmailAndPassword(
           _authData['email']!,
           _authData['password']!,
@@ -78,13 +78,13 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   void _switchAuthMode() {
-    if (_authMode == AuthMode.Login) {
+    if (_authMode == AuthMode.login) {
       setState(() {
-        _authMode = AuthMode.SignUp;
+        _authMode = AuthMode.signUp;
       });
     } else {
       setState(() {
-        _authMode = AuthMode.Login;
+        _authMode = AuthMode.login;
       });
     }
   }
@@ -94,7 +94,7 @@ class _AuthScreenState extends State<AuthScreen> {
     final deviceSize = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
-        title: Text(_authMode == AuthMode.Login ? 'Login' : 'Sign Up'),
+        title: Text(_authMode == AuthMode.login ? 'Login' : 'Sign Up'),
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -132,12 +132,12 @@ class _AuthScreenState extends State<AuthScreen> {
                       _authData['password'] = value ?? '';
                     },
                   ),
-                  if (_authMode == AuthMode.SignUp)
+                  if (_authMode == AuthMode.signUp)
                     TextFormField(
-                      enabled: _authMode == AuthMode.SignUp,
+                      enabled: _authMode == AuthMode.signUp,
                       decoration: const InputDecoration(labelText: 'Confirm Password'),
                       obscureText: true,
-                      validator: _authMode == AuthMode.SignUp
+                      validator: _authMode == AuthMode.signUp
                           ? (value) {
                               if (value != _passwordController.text) {
                                 return 'Passwords do not match!';
@@ -154,12 +154,12 @@ class _AuthScreenState extends State<AuthScreen> {
                   else
                     GradientButton(
                       onPressed: _submit,
-                      text: _authMode == AuthMode.Login ? 'LOGIN' : 'SIGN UP',
+                      text: _authMode == AuthMode.login ? 'LOGIN' : 'SIGN UP',
                     ),
                   TextButton(
                     onPressed: _switchAuthMode,
                     child: Text(
-                        '${_authMode == AuthMode.Login ? 'SIGNUP' : 'LOGIN'} INSTEAD'),
+                        '${_authMode == AuthMode.login ? 'SIGNUP' : 'LOGIN'} INSTEAD'),
                   ),
                 ],
               ),

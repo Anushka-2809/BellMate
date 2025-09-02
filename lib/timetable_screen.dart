@@ -72,13 +72,12 @@ class _TimetableScreenState extends State<TimetableScreen> {
               ),
               actions: <Widget>[
                 TextButton(
-                  child: const Text('Cancel'),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
+                  child: const Text('Cancel'),
                 ),
                 ElevatedButton(
-                  child: const Text('Add'),
                   onPressed: () {
                     if (subjectController.text.isNotEmpty) {
                       final newPeriod = Period(
@@ -92,6 +91,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
                       Navigator.of(context).push(MaterialPageRoute(builder: (context) => SetAlarmScreen(period: newPeriod)));
                     }
                   },
+                  child: const Text('Add'),
                 ),
               ],
             );
@@ -178,9 +178,9 @@ class _TimetableScreenState extends State<TimetableScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.deepPurple,
         onPressed: _showAddEntryDialog,
         child: const Icon(Icons.add),
-        backgroundColor: Colors.deepPurple,
       ),
     );
   }

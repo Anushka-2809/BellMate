@@ -77,7 +77,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             onPressed: () async {
               await authService.signOut();
-              context.go('/');
+              if (mounted) {
+                context.go('/');
+              }
             },
           ),
         ],
