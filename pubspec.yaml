@@ -20,6 +20,8 @@ dependencies:
   go_router: ^16.2.1
   audioplayers: ^6.0.0
   table_calendar: ^3.1.2
+  flutter_background_service: ^5.1.0
+  flutter_background_service_android: ^6.3.1
 
 dev_dependencies:
   flutter_test:

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:myapp/bell_service.dart';
 import 'package:myapp/period_model.dart';
+import 'package:provider/provider.dart';
 
 class SetAlarmScreen extends StatefulWidget {
   final Period period;
@@ -13,12 +14,12 @@ class SetAlarmScreen extends StatefulWidget {
 }
 
 class _SetAlarmScreenState extends State<SetAlarmScreen> {
-  final BellService _bellService = BellService();
-
   @override
   void initState() {
     super.initState();
-    _bellService.playBellSound();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<BellService>(context, listen: false).playBellSound();
+    });
   }
 
   @override

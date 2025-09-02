@@ -1,4 +1,9 @@
+import 'dart:async';
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -9,12 +14,13 @@ import 'package:myapp/splash_screen.dart';
 import 'package:myapp/welcome_screen.dart';
 import 'auth_service.dart';
 import 'bell_service.dart';
-import 'notification_service.dart';
 import 'notes_provider.dart';
 import 'timetable_provider.dart';
+import 'period_model.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeService();
   final prefs = await SharedPreferences.getInstance();
 
   runApp(
@@ -23,18 +29,67 @@ void main() async {
         ChangeNotifierProvider(create: (context) => AuthService(prefs)),
         ChangeNotifierProvider(create: (context) => TimetableProvider()),
         ChangeNotifierProvider(create: (context) => NotesProvider()),
-        Provider(
-          create: (context) => BellService(),
-        ),
-        ProxyProvider2<TimetableProvider, BellService, NotificationService>(
-          update: (context, timetableProvider, bellService, previous) =>
-              NotificationService(timetableProvider, bellService),
-          dispose: (context, service) => service.dispose(),
-        ),
+        Provider(create: (context) => BellService()),
       ],
       child: const MyApp(),
     ),
   );
+}
+
+Future<void> initializeService() async {
+  final service = FlutterBackgroundService();
+  await service.configure(
+    androidConfiguration: AndroidConfiguration(
+      onStart: onStart,
+      isForegroundMode: true,
+      autoStart: true,
+    ),
+    iosConfiguration: IosConfiguration(), // This is the correct configuration
+  );
+}
+
+@pragma('vm:entry-point')
+void onStart(ServiceInstance service) async {
+  DartPluginRegistrant.ensureInitialized();
+
+  final BellService bellService = BellService();
+
+  if (service is AndroidServiceInstance) {
+    service.on('setAsForeground').listen((event) {
+      service.setAsForegroundService();
+    });
+
+    service.on('setAsBackground').listen((event) {
+      service.setAsBackgroundService();
+    });
+  }
+
+  service.on('stopService').listen((event) {
+    service.stopSelf();
+  });
+
+  Timer.periodic(const Duration(minutes: 1), (timer) async {
+    final prefs = await SharedPreferences.getInstance();
+    final List<String>? periodsJson = prefs.getStringList('periods');
+
+    if (periodsJson == null) return;
+
+    final now = DateTime.now();
+    final List<Period> periods = periodsJson
+        .map((e) => Period.fromJson(e))
+        .toList();
+
+    for (final period in periods) {
+      if (period.date.year == now.year &&
+          period.date.month == now.month &&
+          period.date.day == now.day &&
+          period.time.hour == now.hour &&
+          period.time.minute == now.minute) {
+        bellService.playBellSound();
+        break;
+      }
+    }
+  });
 }
 
 class MyApp extends StatelessWidget {
