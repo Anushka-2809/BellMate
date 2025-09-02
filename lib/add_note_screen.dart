@@ -9,44 +9,80 @@ class AddNoteScreen extends StatefulWidget {
 }
 
 class _AddNoteScreenState extends State<AddNoteScreen> {
-  final _titleController = TextEditingController();
-  final _contentController = TextEditingController();
+  final _noteController = TextEditingController();
+
+  void _saveNote() {
+    final text = _noteController.text.trim();
+    if (text.isEmpty) return;
+
+    final lines = text.split('\n');
+    final newNote = Note(
+      title: lines.first,
+      content: lines.skip(1).join('\n'),
+    );
+
+    Navigator.pop(context, newNote);
+  }
+
+  void _sendNote() {
+    final text = _noteController.text.trim();
+    if (text.isEmpty) return;
+
+    final lines = text.split('\n');
+    final newNote = Note(
+      title: lines.first,
+      content: lines.skip(1).join('\n'),
+    );
+
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Note sent successfully!")),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Add Note'),
+        backgroundColor: Colors.deepPurple,
+        elevation: 0,
+        centerTitle: true,
+        title: const Text(
+          "New Note",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.check),
+            tooltip: "Save Note",
+            onPressed: _saveNote,
+          ),
+          IconButton(
+            icon: const Icon(Icons.send),
+            tooltip: "Send Note",
+            onPressed: _sendNote,
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'Title',
-              ),
+        child: TextField(
+          controller: _noteController,
+          maxLines: null,
+          keyboardType: TextInputType.multiline,
+          style: const TextStyle(fontSize: 16, height: 1.5),
+          decoration: InputDecoration(
+            hintText: "Title\n\nStart writing your note here...",
+            hintStyle: TextStyle(color: Colors.grey[400], fontSize: 16),
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _contentController,
-              decoration: const InputDecoration(
-                labelText: 'Content',
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                final newNote = Note(
-                  title: _titleController.text,
-                  content: _contentController.text,
-                );
-                Navigator.pop(context, newNote);
-              },
-              child: const Text('Add Note'),
-            ),
-          ],
+            contentPadding: const EdgeInsets.all(16),
+          ),
         ),
       ),
     );

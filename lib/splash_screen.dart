@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'auth_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -30,8 +32,13 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
 
-    Timer(const Duration(seconds: 5), () {
-      context.go('/welcome');
+    Timer(const Duration(seconds: 2), () {
+      final auth = Provider.of<AuthService>(context, listen: false);
+      if (auth.isLoggedIn()) {
+        context.go('/home');
+      } else {
+        context.go('/welcome');
+      }
     });
   }
 
@@ -44,13 +51,13 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.teal.shade50,
       body: Center(
         child: ScaleTransition(
           scale: _animation,
           child: ShaderMask(
             shaderCallback: (bounds) => const LinearGradient(
-              colors: [Colors.green, Colors.blue],
+              colors: [Color(0xFF26A69A), Color(0xFF80CBC4)], // Teal gradients
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ).createShader(bounds),

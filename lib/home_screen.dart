@@ -68,6 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('BellMate'),
+        centerTitle: true,
         actions: [
           IconButton(
             icon: const GradientIcon(
@@ -77,9 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             onPressed: () async {
               await authService.signOut();
-              if (mounted) {
-                context.go('/');
-              }
+              context.go('/');
             },
           ),
         ],
@@ -115,7 +114,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.amber[800],
+        selectedItemColor: Theme.of(context).colorScheme.primary,
         onTap: _onItemTapped,
       ),
     );

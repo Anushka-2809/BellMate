@@ -4,6 +4,10 @@ import 'package:provider/provider.dart';
 import 'package:myapp/period_model.dart';
 import 'package:myapp/set_alarm_screen.dart';
 import 'package:myapp/timetable_provider.dart';
+import 'package:myapp/notification_service.dart';
+import 'package:myapp/bell_service.dart';
+import 'package:myapp/notification_service.dart';
+import 'package:myapp/bell_service.dart';
 
 class TimetableScreen extends StatefulWidget {
   const TimetableScreen({super.key});
@@ -13,6 +17,89 @@ class TimetableScreen extends StatefulWidget {
 }
 
 class _TimetableScreenState extends State<TimetableScreen> {
+  late final NotificationService _notificationService;
+  DateTime selectedDate = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    final timetableProvider = Provider.of<TimetableProvider>(context, listen: false);
+    final bellService = BellService();
+    _notificationService = NotificationService(timetableProvider, bellService);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      timetableProvider.loadTimetable();
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _notificationService.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final timetableProvider = Provider.of<TimetableProvider>(context);
+    final allPeriods = timetableProvider.periods;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('All Scheduled Alarms'),
+        centerTitle: true,
+      ),
+      body: allPeriods.isEmpty
+          ? const Center(child: Text('No alarms scheduled.'))
+          : ListView.builder(
+              itemCount: allPeriods.length,
+              itemBuilder: (context, index) {
+                final period = allPeriods[index];
+                return Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+                  child: ListTile(
+                    leading: const CircleAvatar(child: Icon(Icons.alarm)),
+                    title: Text(period.subject, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text(
+                      '${DateFormat.yMMMd().format(period.date)} at ${period.time.format(context)}',
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.play_circle_fill, color: Colors.green),
+                          tooltip: 'Preview Alarm',
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => SetAlarmScreen(period: period),
+                              ),
+                            );
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.redAccent),
+                          onPressed: () {
+                            timetableProvider.deletePeriod(period);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddEntryDialog,
+        child: const Icon(Icons.add),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+      ),
+    );
+  }
+
   Future<void> _showAddEntryDialog() async {
     final subjectController = TextEditingController();
     TimeOfDay selectedTime = TimeOfDay.now();
@@ -24,13 +111,23 @@ class _TimetableScreenState extends State<TimetableScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+              ),
               title: const Text('Add New Task'),
               content: SingleChildScrollView(
                 child: ListBody(
                   children: <Widget>[
                     TextField(
                       controller: subjectController,
-                      decoration: const InputDecoration(hintText: 'Enter task'),
+                      decoration: InputDecoration(
+                        hintText: 'Enter task',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        filled: true,
+                        fillColor: Theme.of(context).cardColor.withOpacity(0.95),
+                      ),
                     ),
                     const SizedBox(height: 20),
                     ListTile(
@@ -59,6 +156,8 @@ class _TimetableScreenState extends State<TimetableScreen> {
                         final TimeOfDay? picked = await showTimePicker(
                           context: context,
                           initialTime: selectedTime,
+                          initialEntryMode: TimePickerEntryMode.input,
+                          helpText: 'Select Time (HH:MM)',
                         );
                         if (picked != null && picked != selectedTime) {
                           setState(() {
@@ -72,116 +171,45 @@ class _TimetableScreenState extends State<TimetableScreen> {
               ),
               actions: <Widget>[
                 TextButton(
+                  child: const Text('Cancel'),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  child: const Text('Cancel'),
                 ),
                 ElevatedButton(
-                  onPressed: () {
-                    if (subjectController.text.isNotEmpty) {
-                      final newPeriod = Period(
-                        subject: subjectController.text,
-                        time: selectedTime,
-                        date: selectedDate,
-                      );
-                      Provider.of<TimetableProvider>(context, listen: false)
-                          .addPeriod(newPeriod);
-                      Navigator.of(context).pop();
-                      Navigator.of(context).push(MaterialPageRoute(builder: (context) => SetAlarmScreen(period: newPeriod)));
-                    }
-                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
                   child: const Text('Add'),
+                  onPressed: () {
+                    final subject = subjectController.text.trim();
+                    if (subject.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please enter a task name.')),
+                      );
+                      return;
+                    }
+                    final newPeriod = Period(
+                      subject: subject,
+                      date: selectedDate,
+                      time: selectedTime,
+                    );
+                    Provider.of<TimetableProvider>(context, listen: false).addPeriod(newPeriod);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Scheduled "$subject" for ${selectedTime.format(context)}')),
+                    );
+                    Navigator.of(context).pop();
+                  },
                 ),
               ],
             );
           },
         );
       },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Timetable'),
-      ),
-      body: Consumer<TimetableProvider>(
-        builder: (context, timetableProvider, child) {
-          final periods = timetableProvider.periods;
-
-          if (periods.isEmpty) {
-            return const Center(
-              child: Text(
-                'No tasks scheduled.',
-                style: TextStyle(fontSize: 18, color: Colors.grey),
-              ),
-            );
-          }
-
-          periods.sort((a, b) {
-            int dateComp = a.date.compareTo(b.date);
-            if (dateComp != 0) return dateComp;
-            final aTime = a.time.hour * 60 + a.time.minute;
-            final bTime = b.time.hour * 60 + b.time.minute;
-            return aTime.compareTo(bTime);
-          });
-
-          final Map<DateTime, List<Period>> groupedPeriods = {};
-          for (final period in periods) {
-            final dateKey = DateTime(period.date.year, period.date.month, period.date.day);
-            if (!groupedPeriods.containsKey(dateKey)) {
-              groupedPeriods[dateKey] = [];
-            }
-            groupedPeriods[dateKey]!.add(period);
-          }
-
-          final sortedDates = groupedPeriods.keys.toList()..sort();
-
-          return ListView.builder(
-            itemCount: sortedDates.length,
-            itemBuilder: (context, index) {
-              final date = sortedDates[index];
-              final periodsForDate = groupedPeriods[date]!;
-              final dateText = DateFormat.yMMMMEEEEd().format(date);
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      dateText,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.deepPurple),
-                    ),
-                  ),
-                  ...periodsForDate.map((period) {
-                    return Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                      child: ListTile(
-                        title: Text(period.subject, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text(period.time.format(context)),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.redAccent),
-                          onPressed: () {
-                            timetableProvider.deletePeriod(period);
-                          },
-                        ),
-                      ),
-                    );
-                  }),
-                ],
-              );
-            },
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.deepPurple,
-        onPressed: _showAddEntryDialog,
-        child: const Icon(Icons.add),
-      ),
     );
   }
 }

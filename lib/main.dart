@@ -1,9 +1,4 @@
-import 'dart:async';
-import 'dart:convert';
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -14,13 +9,13 @@ import 'package:myapp/splash_screen.dart';
 import 'package:myapp/welcome_screen.dart';
 import 'auth_service.dart';
 import 'bell_service.dart';
+import 'notification_service.dart';
 import 'notes_provider.dart';
 import 'timetable_provider.dart';
-import 'period_model.dart';
+import 'theme_provider.dart';
 
-Future<void> main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initializeService();
   final prefs = await SharedPreferences.getInstance();
 
   runApp(
@@ -29,57 +24,19 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (context) => AuthService(prefs)),
         ChangeNotifierProvider(create: (context) => TimetableProvider()),
         ChangeNotifierProvider(create: (context) => NotesProvider()),
-        Provider(create: (context) => BellService()),
+        ChangeNotifierProvider(create: (context) => ThemeProvider(prefs)),
+        Provider(
+          create: (context) => BellService(),
+        ),
+        ProxyProvider2<TimetableProvider, BellService, NotificationService>(
+          update: (context, timetableProvider, bellService, previous) =>
+              NotificationService(timetableProvider, bellService),
+          dispose: (context, service) => service.dispose(),
+        ),
       ],
       child: const MyApp(),
     ),
   );
-}
-
-Future<void> initializeService() async {
-  final service = FlutterBackgroundService();
-  await service.configure(
-    androidConfiguration: AndroidConfiguration(
-      onStart: onStart,
-      isForegroundMode: true,
-      autoStart: true,
-    ),
-    iosConfiguration: IosConfiguration(),
-  );
-}
-
-@pragma('vm:entry-point')
-void onStart(ServiceInstance service) async {
-  DartPluginRegistrant.ensureInitialized();
-
-  final BellService bellService = BellService();
-
-  service.on('stopService').listen((event) {
-    service.stopSelf();
-  });
-
-  Timer.periodic(const Duration(minutes: 1), (timer) async {
-    final prefs = await SharedPreferences.getInstance();
-    final List<String>? periodsJson = prefs.getStringList('periods');
-
-    if (periodsJson == null) return;
-
-    final now = DateTime.now();
-    final List<Period> periods = periodsJson
-        .map((e) => Period.fromJson(jsonDecode(e)))
-        .toList();
-
-    for (final period in periods) {
-      if (period.date.year == now.year &&
-          period.date.month == now.month &&
-          period.date.day == now.day &&
-          period.time.hour == now.hour &&
-          period.time.minute == now.minute) {
-        bellService.playBellSound();
-        break;
-      }
-    }
-  });
 }
 
 class MyApp extends StatelessWidget {
@@ -87,60 +44,95 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const primarySeedColor = Colors.blue;
+    const primarySeedColor = Colors.teal;
+
+    final lightTheme = ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+      colorScheme: ColorScheme.fromSeed(seedColor: primarySeedColor, brightness: Brightness.light),
+      scaffoldBackgroundColor: Colors.teal.shade50,
+      cardColor: Colors.white,
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.teal.shade100,
+        titleTextStyle: GoogleFonts.oswald(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.teal.shade900),
+        iconTheme: IconThemeData(color: Colors.teal.shade900),
+      ),
+      textTheme: GoogleFonts.interTextTheme(ThemeData.light().textTheme),
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(backgroundColor: Colors.teal),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white),
+      ),
+    );
 
     final darkTheme = ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      scaffoldBackgroundColor: Colors.black,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: primarySeedColor,
-        brightness: Brightness.dark,
-      ),
-      textTheme: GoogleFonts.latoTextTheme(ThemeData.dark().textTheme),
+      colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple, brightness: Brightness.dark),
+      scaffoldBackgroundColor: Colors.grey.shade900,
+      cardColor: Colors.grey.shade800,
       appBarTheme: AppBarTheme(
-        backgroundColor: Colors.grey[900],
-        foregroundColor: Colors.white,
-        titleTextStyle:
-            GoogleFonts.oswald(fontSize: 24, fontWeight: FontWeight.bold),
+        backgroundColor: Colors.grey.shade900,
+        titleTextStyle: GoogleFonts.oswald(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
+      textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(backgroundColor: Colors.deepPurple),
       elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          textStyle:
-              GoogleFonts.roboto(fontSize: 16, fontWeight: FontWeight.w500),
-        ),
+        style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple, foregroundColor: Colors.white),
       ),
+    );
+
+  final authService = Provider.of<AuthService>(context);
+  final themeProvider = Provider.of<ThemeProvider>(context);
+
+  final router = GoRouter(
+      initialLocation: '/',
+      refreshListenable: authService,
+      redirect: (context, state) {
+        final bool loggedIn = authService.isLoggedIn();
+        final String location = state.matchedLocation;
+
+        final bool goingToAuth = location == '/auth' || location == '/welcome';
+        final bool atRoot = location == '/';
+        final bool goingHome = location == '/home';
+
+        if (!loggedIn && (goingHome)) {
+          return '/auth';
+        }
+
+        if (loggedIn && (goingToAuth || atRoot)) {
+          return '/home';
+        }
+
+        return null;
+      },
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (context, state) => const SplashScreen(),
+        ),
+        GoRoute(
+          path: '/welcome',
+          builder: (context, state) => const WelcomeScreen(),
+        ),
+        GoRoute(
+          path: '/auth',
+          builder: (context, state) => const AuthScreen(),
+        ),
+        GoRoute(
+          path: '/home',
+          builder: (context, state) => const HomeScreen(),
+        ),
+      ],
     );
 
     return MaterialApp.router(
       title: 'BellMate',
-      theme: darkTheme,
-      themeMode: ThemeMode.dark,
+  theme: lightTheme,
+  darkTheme: darkTheme,
+  themeMode: themeProvider.themeMode,
       debugShowCheckedModeBanner: false,
-      routerConfig: GoRouter(
-        initialLocation: '/',
-        routes: [
-          GoRoute(
-            path: '/',
-            builder: (context, state) => const SplashScreen(),
-          ),
-          GoRoute(
-            path: '/welcome',
-            builder: (context, state) => const WelcomeScreen(),
-          ),
-          GoRoute(
-            path: '/auth',
-            builder: (context, state) => const AuthScreen(),
-          ),
-          GoRoute(
-            path: '/home',
-            builder: (context, state) => const HomeScreen(),
-          ),
-        ],
-      ),
+      routerConfig: router,
     );
   }
 }
