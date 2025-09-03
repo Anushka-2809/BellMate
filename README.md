@@ -5,6 +5,7 @@
 ---
 # Key Features
 ## For Users
+### 
 . User Authentication: Secure login & signup system.
 . Timetable Management: Create, view, and manage daily/weekly schedules.
 . Bell Reminder: Automated bell sound triggers at scheduled times.
@@ -25,6 +26,7 @@
 . Option to extend with Firebase / MongoDB for cloud sync
 ---
 # Project Structure
+###
 . lib/ → Flutter application source code
 . web/ → Web app build files
 . macos/, linux/, windows/ → Platform-specific integration
@@ -61,6 +63,7 @@ assets:
 . Timetable and notes are stored locally (offline-first).
 ---
 # What BellMate Does
+###
 . Rings a bell automatically at scheduled times.
 . Lets users add, edit, and delete timetables.
 . Provides a notes system for tasks/events.
