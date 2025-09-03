@@ -1,16 +1,111 @@
-# myapp
+BellMate: Periodic Bell and Timetable Reminder App
+Overview
 
-A new Flutter project.
+BellMate is a cross-platform mobile and web application built with Flutter. It helps users manage schedules efficiently with timetables, notes, and automatic bell reminders. The app supports local data storage for offline access and ensures users never miss important events or classes.
 
-## Getting Started
+Key Features
+For Users:
 
-This project is a starting point for a Flutter application.
+User Authentication: Secure login & signup system.
 
-A few resources to get you started if this is your first Flutter project:
+Timetable Management: Create, view, and manage daily/weekly schedules.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Bell Reminder: Automated bell sound triggers at scheduled times.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Notes Interface: Add, edit, and delete notes linked with events/tasks.
+
+Local Storage: Persistent offline storage using Flutter’s shared preferences/local DB.
+
+Cross-Platform Support: Works seamlessly on Android, iOS, Web, Linux, macOS, and Windows.
+
+Tech Stack
+Core Framework:
+
+Flutter (Dart) → UI and business logic
+
+Native & Build Tools:
+
+C++ & C → Flutter engine bindings
+
+Swift → iOS integration
+
+CMake → Build system for native compilation
+
+Nix → Environment & package management
+
+Storage:
+
+Local Storage / Shared Preferences (current)
+
+Option to extend with Firebase / MongoDB for cloud sync
+
+Project Structure
+
+lib/ → Flutter application source code
+
+web/ → Web app build files
+
+macos/, linux/, windows/ → Platform-specific integration
+
+test/ → Unit and widget tests
+
+assets/ → Bell audio files & other static resources
+
+pubspec.yaml → Dependencies and project configuration
+
+Getting Started
+Prerequisites
+
+Flutter SDK installed
+
+Android Studio / VS Code (with Flutter extension)
+
+Emulator or physical device
+
+Installation
+
+Clone the repository:
+
+git clone https://github.com/Anushka-2809/myapp
+
+
+Install dependencies:
+
+flutter pub get
+
+
+Run the app:
+
+flutter run
+
+Configuration
+
+Place your bell.mp3 inside the assets/ folder.
+
+Add the file path under pubspec.yaml:
+
+assets:
+  - assets/bell.mp3
+
+
+Timetable and notes are stored locally (offline-first).
+
+What BellMate Does
+
+Rings a bell automatically at scheduled times.
+
+Lets users add, edit, and delete timetables.
+
+Provides a notes system for tasks/events.
+
+Saves all data locally for offline access.
+
+Runs on multiple platforms with a single codebase.
+
+Contributing
+
+Contributions are welcome! Fork the repo, create a new branch, and submit a pull request.
+
+About
+
+BellMate is a Flutter-based productivity app designed to simplify schedule management and reminders. With cross-platform support and offline-first storage, it is lightweight, reliable, and user-friendly.
