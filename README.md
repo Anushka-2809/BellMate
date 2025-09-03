@@ -1,11 +1,11 @@
 # BellMate: Periodic Bell and Timetable Reminder App
 ---
 # Overview
-### BellMate is a cross-platform mobile and web application built with Flutter. It helps users manage schedules efficiently with timetables, notes, and automatic bell reminders. The app supports local data storage for offline access and ensures users never miss important events or classes.
+##### BellMate is a cross-platform mobile and web application built with Flutter. It helps users manage schedules efficiently with timetables, notes, and automatic bell reminders. The app supports local data storage for offline access and ensures users never miss important events or classes.
 ---
 # Key Features
 ## For Users
-### 
+##### 
 . User Authentication: Secure login & signup system.
 . Timetable Management: Create, view, and manage daily/weekly schedules.
 . Bell Reminder: Automated bell sound triggers at scheduled times.
@@ -15,18 +15,19 @@
 ---
 # Tech Stack
 ## Core Framework
-. Flutter (Dart) → UI and business logic
+Flutter (Dart) → UI and business logic
 # Native & Build Tools
 . C++ & C → Flutter engine bindings
 . Swift → iOS integration
 . CMake → Build system for native compilation
 . Nix → Environment & package management
 # Storage
+#####
 . Local Storage / Shared Preferences (current)
 . Option to extend with Firebase / MongoDB for cloud sync
 ---
 # Project Structure
-###
+#####
 . lib/ → Flutter application source code
 . web/ → Web app build files
 . macos/, linux/, windows/ → Platform-specific integration
@@ -63,7 +64,7 @@ assets:
 . Timetable and notes are stored locally (offline-first).
 ---
 # What BellMate Does
-###
+#####
 . Rings a bell automatically at scheduled times.
 . Lets users add, edit, and delete timetables.
 . Provides a notes system for tasks/events.
@@ -71,7 +72,9 @@ assets:
 . Runs on multiple platforms with a single codebase.
 ---
 # Contributing
+#####
 Contributions are welcome! Fork the repo, create a new branch, and submit a pull request.
 ---
 # About
+#####
 BellMate is a Flutter-based productivity app designed to simplify schedule management and reminders. With cross-platform support and offline-first storage, it is lightweight, reliable, and user-friendly.
