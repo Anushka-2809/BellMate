@@ -2,7 +2,7 @@
 
 ## 🔹 Overview
 
-*BellMate* is a *cross-platform mobile and web application* built with *Flutter. It helps users manage schedules efficiently through **timetables, notes, and automatic bell reminders. With **offline storage* and *multi-platform support*, BellMate ensures you never miss an important class, task, or event.
+*BellMate* is a *cross-platform mobile and web application* built with *Flutter. It helps users manage schedules efficiently through timetables, notes, and automatic bell reminders. With *offline storage* and *multi-platform support*, BellMate ensures you never miss an important class, task, or event.
 
 ---
 
